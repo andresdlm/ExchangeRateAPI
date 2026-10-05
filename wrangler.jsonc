@@ -1,0 +1,8 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bcv-exchange-rate-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-04",
+  "vars": { "PUBLICATION_HOUR_VET": "18", "CACHE_RETENTION_SECONDS": "604800" },
+  "observability": { "enabled": true }
+}
