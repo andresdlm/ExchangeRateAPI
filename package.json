@@ -8,7 +8,7 @@
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test tests/*.test.ts",
-    "check": "npm run typecheck && npm test"
+    "check": "pnpm run typecheck && pnpm run test"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261001.1",
@@ -19,5 +19,6 @@
   },
   "dependencies": {
     "htmlparser2": "^10.0.0"
-  }
+  },
+  "packageManager": "pnpm@12.8.1"
 }

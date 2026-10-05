@@ -4,10 +4,10 @@ API en TypeScript para Cloudflare Workers, sin base de datos. Extrae USD, EUR y 
 
 ## Ejecutar
 
-Requisitos: Node.js 22 o posterior y npm.
+Requisitos: Node.js 22 o posterior y pnpm 12.8.1 (la versión está fijada en `package.json`).
 
 ```sh
-npm ci
+pnpm install --frozen-lockfile
 cp .env.example .env
 openssl rand -hex 32
 ```
@@ -15,17 +15,19 @@ openssl rand -hex 32
 Coloca la llave generada en `API_KEY` dentro de `.env`. No compartas ni versionas ese archivo. Wrangler admite `.env` para desarrollo; no crees simultáneamente `.dev.vars`, ya que tiene prioridad.
 
 ```sh
-npm run dev
+pnpm run dev
 curl http://localhost:8787/api/v1/rates -H 'X-API-Key: TU_LLAVE'
-npm run check
+pnpm run check
 ```
+
+Las versiones de las dependencias se fijan en `pnpm-lock.yaml`. Para añadir o actualizar dependencias usa pnpm y versiona el lockfile. `pnpm-workspace.yaml` configura los scripts de instalación necesarios para `esbuild` y `workerd`; el proyecto sigue siendo una sola aplicación. La excepción de antigüedad en ese archivo se limita a la versión de los tipos de Cloudflare que ya tenía el proyecto, para conservarla durante la migración.
 
 ## Desplegar en Cloudflare
 
 ```sh
-npx wrangler login
-npx wrangler secret put API_KEY
-npm run deploy
+pnpm exec wrangler login
+pnpm exec wrangler secret put API_KEY
+pnpm run deploy
 ```
 
 Introduce una llave aleatoria de al menos 32 caracteres cuando Wrangler la solicite. El secreto queda en Cloudflare y no necesita una BDD ni un archivo `.env` en producción. Puedes rotarlo repitiendo `secret put`. La API acepta una llave estática; no incorpora usuarios ni permisos por cliente.
@@ -80,12 +82,12 @@ Los valores de tiempo tienen nombres con sus unidades (`retentionSeconds`, `curr
 
 Las interfaces separan la lógica de Cloudflare y BCV sin añadir un framework o un contenedor de inyección. `htmlparser2` permite extraer por estructura HTML sin expresiones regulares sobre el documento completo. Si el BCV cambia el HTML, ajusta el adaptador y su fixture.
 
-Las pruebas cubren el HTML oficial capturado, validaciones, caché, revalidación, concurrencia, fallos y autenticación. `npx wrangler deploy --dry-run` verifica el empaquetado sin publicar. La conectividad BCV desde producción debe verificarse después del despliegue: que funcione desde un equipo local no garantiza que el BCV permita todas las ubicaciones de Cloudflare.
+Las pruebas cubren el HTML oficial capturado, validaciones, caché, revalidación, concurrencia, fallos y autenticación. `pnpm exec wrangler deploy --dry-run` verifica el empaquetado sin publicar. La conectividad BCV desde producción debe verificarse después del despliegue: que funcione desde un equipo local no garantiza que el BCV permita todas las ubicaciones de Cloudflare.
 
 ## Diagnóstico local
 
 Si aparece `503`, revisa el cuerpo JSON: `configuration_error` indica configuración inválida y `rates_unavailable` indica que no se pudo consultar/validar la fuente y no había copia disponible. Los errores del adaptador se registran en la terminal sin imprimir la API key.
 
-El BCV puede presentar una cadena HTTPS incompleta. `npm run dev` incorpora la cadena pública verificada de Sectigo (intermedio y raíz) para Node/Miniflare, manteniendo la validación TLS. Después de actualizar este proyecto, reinicia con ese comando; ejecutar directamente `npx wrangler dev` no aplica esta configuración. Consulta `certs/README.md` para el origen y mantenimiento del certificado.
+El BCV puede presentar una cadena HTTPS incompleta. `pnpm run dev` incorpora la cadena pública verificada de Sectigo (intermedio y raíz) para Node/Miniflare, manteniendo la validación TLS. Después de actualizar este proyecto, reinicia con ese comando; ejecutar directamente `pnpm exec wrangler dev` no aplica esta configuración. Consulta `certs/README.md` para el origen y mantenimiento del certificado.
 
 En Network distingue la solicitud HTTP `/api/v1/rates` de las conexiones WebSocket del inspector, que pueden permanecer abiertas. Una respuesta HTTP 503 terminada no demuestra que esas conexiones estén bloqueadas. Bruno ofrece un timeout de 15 segundos para las consultas.
